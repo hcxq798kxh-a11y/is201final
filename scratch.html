@@ -6,13 +6,32 @@
     <title>Document</title>
 </head>
 <body>
-    <H1>Tableau</H1>
-    <iframe 
-    src="https://public.tableau.com/app/profile/wyatt.schoenrock/viz/scratchsheet/Sheet2?publish=yes&:embed=true"
-    width="100%" 
-    height="800"
-    frameborder="0">
-    </iframe>
+    <h1>Tableau</h1>
+    <div class="tableauPlaceholder" id="tableauViz" style="position: relative; width: 100%; min-height: 800px;">
+        <noscript>
+            <a href="#">
+                <img alt="Tableau Dashboard" src="https://public.tableau.com/static/images/sc/scratchsheet/Sheet2/1_rss.png" style="border: none" />
+            </a>
+        </noscript>
+        <object class="tableauViz" style="display:none;">
+            <param name="host_url" value="https%3A%2F%2Fpublic.tableau.com%2F" />
+            <param name="embed_code_version" value="3" />
+            <param name="site_root" value="" />
+            <param name="name" value="scratchsheet/Sheet2" />
+            <param name="tabs" value="no" />
+            <param name="toolbar" value="yes" />
+            <param name="showVizHome" value="no" />
+        </object>
+    </div>
+    <script type="text/javascript">
+        var divElement = document.getElementById("tableauViz");
+        var vizElement = divElement.getElementsByTagName("object")[0];
+        vizElement.style.width = "100%";
+        vizElement.style.height = "800px";
+        var scriptElement = document.createElement("script");
+        scriptElement.src = "https://public.tableau.com/javascripts/api/viz_v1.js";
+        vizElement.parentNode.insertBefore(scriptElement, vizElement);
+    </script>
     <h1>Inspiration</h1>
     <iframe width="560" height="315" src="https://www.youtube.com/embed/fPl4fz8MALE?si=PzrFb_jR836AtCOf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     
