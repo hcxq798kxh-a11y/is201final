@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bird Photography</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #000;
+    color: white;
+  }
+
+  canvas { display: block; }
+
+  #ui {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.95);
+    z-index: 20;
+    text-align: center;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 16px;
+    margin-top: 12px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="startScreen" class="screen">
+  <h1>Bird Photography</h1>
+  <p>Find the hidden bird as fast as possible</p>
+  <p>High Score: <span id="highScore">0</span></p>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<div id="endScreen" class="screen" style="display:none;">
+  <h1>You Found It!</h1>
+  <p id="endTime"></p>
+  <button onclick="startGame()">Play Again</button>
+  <button onclick="goToMenu()">Return to Menu</button>
+</div>
+
+<div id="ui">
+  <div>Time: <span id="time">0.00</span>s</div>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// Bird image asset
+const birdImg = new Image();
+birdImg.src = "assets/img/bird.png";
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+let startTime = null;
+let found = false;
+let missed = false;
+let bird = null;
+let landscapeType = "forest";
+let highScore = localStorage.getItem("birdHighScore") || null;
+
+if (highScore) {
+  document.getElementById("highScore").textContent = parseFloat(highScore).toFixed(2);
+}
+
+// 3:2 viewfinder
+const view = {
+  x: 0,
+  y: 0,
+  width: 300,
+  height: 200
+};
+
+canvas.addEventListener("mousemove", (e) => {
+  view.x = e.clientX;
+  view.y = e.clientY;
+});
+
+function randomizeLandscape() {
+  const types = ["forest", "desert", "mountains"];
+  landscapeType = types[Math.floor(Math.random() * types.length)];
+}
+
+function startGame() {
+  missed = false;
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("endScreen").style.display = "none";
+
+  startTime = Date.now();
+  found = false;
+
+  randomizeLandscape();
+
+  bird = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: 15
+  };
+}
+
+function goToMenu() {
+  startTime = null;
+  found = false;
+  document.getElementById("endScreen").style.display = "none";
+  document.getElementById("startScreen").style.display = "flex";
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && !found && !missed && startTime) {
+    if (
+      bird.x > view.x - view.width/2 &&
+      bird.x < view.x + view.width/2 &&
+      bird.y > view.y - view.height/2 &&
+      bird.y < view.y + view.height/2
+    ) {
+      // SUCCESS
+      found = true;
+      const timeTaken = (Date.now() - startTime) / 1000;
+
+      document.getElementById("endScreen").querySelector("h1").textContent = "You Found It!";
+      document.getElementById("endTime").textContent = `You found it in ${timeTaken.toFixed(2)} seconds!`;
+      document.getElementById("endScreen").style.display = "flex";
+
+      if (!highScore || timeTaken < highScore) {
+        highScore = timeTaken;
+        localStorage.setItem("birdHighScore", highScore);
+        document.getElementById("highScore").textContent = timeTaken.toFixed(2);
+      }
+    } else {
+      // MISS
+      missed = true;
+      document.getElementById("endScreen").querySelector("h1").textContent = "Try Again";
+      document.getElementById("endTime").textContent = "You missed the bird!";
+      document.getElementById("endScreen").style.display = "flex";
+    }
+  }
+});
+
+function drawLandscape() {
+  if (landscapeType === "forest") {
+    ctx.fillStyle = "#87CEEB";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#228B22";
+    ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+    for (let i = 0; i < 20; i++) {
+      const x = (i * 200) % canvas.width;
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(x, canvas.height / 2 - 50, 20, 50);
+      ctx.fillStyle = "#006400";
+      ctx.beginPath();
+      ctx.arc(x + 10, canvas.height / 2 - 60, 30, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (landscapeType === "desert") {
+    // Sky
+    ctx.fillStyle = "#87CEEB";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Sand ground
+    ctx.fillStyle = "#f4d28c";
+    ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+    // Static cacti
+    for (let i = 0; i < 10; i++) {
+      const x = (i * 300) % canvas.width;
+      const y = canvas.height / 2 + 20;
+
+      ctx.fillStyle = "#2e8b57";
+      ctx.fillRect(x, y, 10, 60);
+      ctx.fillRect(x - 10, y + 20, 10, 10);
+      ctx.fillRect(x + 10, y + 20, 10, 10);
+    }
+  } else if (landscapeType === "mountains") {
+    // Sky
+    ctx.fillStyle = "#87CEEB";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Mountains
+    for (let i = 0; i < 6; i++) {
+      const x = i * 300;
+      ctx.fillStyle = "#555";
+      ctx.beginPath();
+      ctx.moveTo(x, canvas.height/2);
+      ctx.lineTo(x + 150, canvas.height/2 - 200);
+      ctx.lineTo(x + 300, canvas.height/2);
+      ctx.fill();
+    }
+
+    // Ground
+    ctx.fillStyle = "#2e8b57";
+    ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+
+    // Pine trees
+    for (let i = 0; i < 15; i++) {
+      const x = (i * 150) % canvas.width;
+      const y = canvas.height/2;
+
+      ctx.fillStyle = "#013220";
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 15, y - 40);
+      ctx.lineTo(x + 30, y);
+      ctx.fill();
+    }
+  }
+}
+
+function drawBird() {
+  if (!bird || !birdImg.complete) return;
+
+  const size = bird.size * 2; // scale image relative to previous circle
+  ctx.drawImage(
+    birdImg,
+    bird.x - size / 2,
+    bird.y - size / 2,
+    size,
+    size
+  );
+}
+
+function drawSceneThroughViewfinder() {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(view.x - view.width/2, view.y - view.height/2, view.width, view.height);
+  ctx.clip();
+
+  drawLandscape();
+  drawBird();
+
+  ctx.restore();
+}
+
+function drawOverlay() {
+  ctx.fillStyle = "rgba(0,0,0,0.85)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawViewfinder() {
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(view.x - view.width/2, view.y - view.height/2, view.width, view.height);
+}
+
+function updateTime() {
+  if (!found && startTime) {
+    const t = (Date.now() - startTime) / 1000;
+    document.getElementById("time").textContent = t.toFixed(2);
+  }
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (startTime) {
+    if (!found && !missed) {
+      drawOverlay();
+      drawSceneThroughViewfinder();
+      drawViewfinder();
+      updateTime();
+    } else if (missed) {
+      // Reveal full scene and bird
+      drawLandscape();
+      drawBird();
+    }
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
